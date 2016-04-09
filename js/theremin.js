@@ -16,64 +16,66 @@ var userInputAmplitude = 0.1;
 var amplitude = (Math.exp(userInputAmplitude) -1)/(Math.exp(1) - 1);
 var frequency = 440;
 
-
-//the oscillaotr is created inside the audio context, it is one of the Node types (which I belive are objects)
-//which the audio context allows us to create, the oscillator shall be refered to by the var "oscillator"
-
-var oscillator = ac.createOscillator();
-
-//set up a node for gain (controling the volume of the oscillator)
-
-var gainNode = ac.createGain();
-// Now to connect things together Oscillator - > Gain note - > Destination(output)
-
-oscillator.connect(gainNode);
-gainNode.connect(ac.destination);
-
-// Now I asgin the intial values of the frequency and amplitude to the oscill ator and gain
-
-gainNode.gain.value = amplitude;
-oscillator.frequency.value = frequency;
-
-//Now to actually play it 
-
-oscillator.start(ac.currentTime + 0);
-oscillator.stop(ac.currentTime + 0.06);
-
-
-
 function play(event) {
 
-if(Date.now() - lastMove > 100) {
+if(Date.now() - lastMove > 300) {
 
-frequency = (590 - event.offsetY)/285 + 1;
-if (frequency < 2.0) {
-frequency = frequency*65.41;
-} else {
-	frequency = 123.5*(frequency-1);
-}
+frequency = (600 - event.offsetY)/200;
+frequency = Math.pow(2,(frequency))*65.41;
 
 userInputAmplitude = event.offsetX/500;
 amplitude = (Math.exp(userInputAmplitude) -1)/(Math.exp(1) - 1);
 
+if(typeof oscillator != "undefined") {
 oscillator.stop(ac.currentTime + 0.01);
+}
+if (typeof osc2 != "undefined") {
+osc2.stop(ac.currentTime + 0.01);
+}
+if (typeof osc1 != "undefined") {
+osc1.stop(ac.currentTime + 0.01);
+}
 
 oscillator = ac.createOscillator();
+osc1 = ac.createOscillator();
+osc2 = ac.createOscillator();
 
+oscillator.type = 'triangle';
+osc1.type = 'triangle';
+osc2.type = 'triangle';
+
+oscillator.frequency.value = frequency;
+osc1.frequency.value = frequency +2;
+osc2.frequency.value = frequency - 2;
 
 gainNode = ac.createGain();
+smallgainNode = ac.createGain()
+
 oscillator.connect(gainNode);
-gainNode.connect(ac.destination);
-
-
+osc1.connect(smallgainNode);
+osc2.connect(smallgainNode);
 
 gainNode.gain.value = amplitude;
-oscillator.frequency.value = frequency;
+smallgainNode.gain.value = amplitude/4;
 
-
+gainNode.connect(ac.destination);
+smallgainNode.connect(ac.destination);
 
 oscillator.start(ac.currentTime + 0);
 oscillator.stop(ac.currentTime + 0.8);
+osc1.start(ac.currentTime + 0);
+osc1.stop(ac.currentTime + 0.8);
+osc2.start(ac.currentTime + 0);
+osc2.stop(ac.currentTime + 0.8);
+
+if(frequency < 160) {
+harmonic(12,3);
+harmonic(24,5);
+harmonic(36,7);
+} else {
+harmonic(12,5);
+harmonic(24,7);
+}
 
 lastMove = Date.now();
 
@@ -129,19 +131,51 @@ function alterNote(n) {
 
 	var lowerGainNode = ac.createGain();
 
-	lowerOscillator.connect(gainNode);
-	lowerGainNode.connect(ac.destination);
-
+	
+	
+    lowerOscillator.type = 'triangle';
 
 
 	lowerGainNode.gain.value = amplitude;
 	lowerOscillator.frequency.value = lowerNoteFrequency;
 
-
+    lowerOscillator.connect(gainNode);
+    lowerGainNode.connect(ac.destination);
 
 	lowerOscillator.start(ac.currentTime + 0);
 	lowerOscillator.stop(ac.currentTime + 0.8);
+    if(frequency < 160) {
+    harmonic(12,3);
+    harmonic(24,5);
+    harmonic(36,7);
+} else {
+harmonic(12,5);
+harmonic(24,7);
 }
 
+}
+
+
+function harmonic(n, m) {
+    var lowerNoteFrequency = frequency*Math.pow(2, (n/12)); 
+    var lowerOscillator = ac.createOscillator();
+
+
+    var lowerGainNode = ac.createGain();
+
+    
+    
+    lowerOscillator.type = 'triangle';
+
+
+    lowerGainNode.gain.value = amplitude/m;
+    lowerOscillator.frequency.value = lowerNoteFrequency;
+
+    lowerOscillator.connect(gainNode);
+    lowerGainNode.connect(ac.destination);
+
+    lowerOscillator.start(ac.currentTime + 0);
+    lowerOscillator.stop(ac.currentTime + 0.8);
+}
 
 
